@@ -1,26 +1,62 @@
+%% 2
+%% A
 clc 
 clear 
 
-load 'polynomial.mat';
-%load 'HW3_virtual_testbed.sl'
+
+% a0 = 1 - deltat/R1C1
+% b0 = Rs*Deltat/R1C1 - Rs + deltat/C1
+% B1 = Rs
 %% B
+
+load 'polynomial.mat';
 % Initialize variables 
 T0a = 25;
 Delta_t  = 1;
 Tspan = 600;
 Q = 5;
-I = -2.5;
+Current_Input = -2.5;
 SOC_0 = 0.5;
-
 mdl = "HW3_virtual_testbed"
 set_param(mdl, 'SimulationCommand', 'update');
 simIn = Simulink.SimulationInput(mdl);
 simIn = setModelParameter(simIn,"StopTime",'Tspan');
 out = sim(simIn);
+Current = -2.5 * ones(601, 1);
+
+figure;
+
+subplot(2,2,1);
+plot(out.tout, Current);
+title('Input Current');
+xlabel('Time');
+ylabel('Current');
+
+subplot(2,2,2);
+plot(out.tout, out.V_out);
+title('Terminal Voltage');
+xlabel('Time');
+ylabel('Voltage');
+
+subplot(2,2,3);
+plot(out.tout, out.SOC_out);
+title('Calculated SOC');
+xlabel('Time');
+ylabel('SOC');
+
+subplot(2,2,4);
+plot(out.tout, out.Temp);
+title('Temp');
+xlabel('Time');
+ylabel('y');
 
 fprintf("The value of SOC at T=10mins is %d", out.SOC_out(end))
 
-%put image of soc estimator in
+image_data = imread('HW3_2b_socestimator.PNG'); 
+figure;
+imshow(image_data);
+
+
 
 %% C
 clc
@@ -46,11 +82,10 @@ T0a = 25;
 Delta_t  = 1;
 Tspan = 1500;
 Q = 5;
-I = -2.5;
 SOC_0 = 0.5;
 alpha = flipud(alpha);
 
-mdl = "HW3_virtual_testbed";
+mdl = "HW3_virtual_testbed_2";
 set_param(mdl, 'SimulationCommand', 'update');
 simIn = Simulink.SimulationInput(mdl);
 simIn = setModelParameter(simIn,"StopTime",'Tspan');
@@ -72,7 +107,7 @@ xlabel('Time');
 ylabel('Voltage');
 
 subplot(2,2,3);
-plot(out.tout, out.SOC_out);
+plot(out.tout(1:1501), out.SOC_out);
 title('Calculated SOC');
 xlabel('Time');
 ylabel('SOC');
@@ -90,11 +125,10 @@ T0a = 25;
 Delta_t  = 1;
 Tspan = 1500;
 Q = 5;
-I = -2.5;
 SOC_0 = 0.25;
 
 
-mdl = "HW3_virtual_testbed";
+mdl = "HW3_virtual_testbed_2";
 set_param(mdl, 'SimulationCommand', 'update');
 simIn = Simulink.SimulationInput(mdl);
 simIn = setModelParameter(simIn,"StopTime",'Tspan');
@@ -104,7 +138,7 @@ out_25 = sim(simIn);
 PHI_25 = zeros(1501, 3);
 PHI_25(:, 1) = out_25.I_out;
 PHI_25(2:end, 2) = out_25.I_out(1:end-1);
-PHI_25(2:end, 3) = -1*out_25.Y_k(1:end-1);
+PHI_25(2:end, 3) = out_25.Y_k(1:end-1);
 
 %solve least squares 
 Y_25 = out_25.Y_k;
@@ -112,17 +146,16 @@ Theta_25 = PHI_25\Y_25
 b1_25 = Theta_25(1)
 b0_25 = Theta_25(2)
 a0_25 = Theta_25(3)
-%%
+
 % 0.5 SOC
 T0a = 25;
 Delta_t  = 1;
 Tspan = 1500;
 Q = 5;
-I = -2.5;
 SOC_0 = 0.5;
 
 
-mdl = "HW3_virtual_testbed";
+mdl = "HW3_virtual_testbed_2";
 set_param(mdl, 'SimulationCommand', 'update');
 simIn = Simulink.SimulationInput(mdl);
 simIn = setModelParameter(simIn,"StopTime",'Tspan');
@@ -132,7 +165,7 @@ out_50 = sim(simIn);
 PHI_50 = zeros(1501, 3);
 PHI_50(:, 1) = out_50.I_out;
 PHI_50(2:end, 2) = out_50.I_out(1:end-1);
-PHI_50(2:end, 3) = -1*out_50.Y_k(1:end-1);
+PHI_50(2:end, 3) = out_50.Y_k(1:end-1);
 
 %solve least squares 
 Y_50 = out_50.Y_k;
@@ -140,17 +173,16 @@ Theta_50 = PHI_50\Y_50
 b1_50 = Theta_50(1)
 b0_50 = Theta_50(2)
 a0_50 = Theta_50(3)
-%%
+
 % 0.75 SOC
 T0a = 25;
 Delta_t  = 1;
 Tspan = 1500;
 Q = 5;
-I = -2.5;
 SOC_0 = 0.75;
 
 
-mdl = "HW3_virtual_testbed";
+mdl = "HW3_virtual_testbed_2";
 set_param(mdl, 'SimulationCommand', 'update');
 simIn = Simulink.SimulationInput(mdl);
 simIn = setModelParameter(simIn,"StopTime",'Tspan');
@@ -160,7 +192,7 @@ out_75 = sim(simIn);
 PHI_75 = zeros(1501, 3);
 PHI_75(:, 1) = out_75.I_out;
 PHI_75(2:end, 2) = out_75.I_out(1:end-1);
-PHI_75(2:end, 3) = -1*out_75.Y_k(1:end-1);
+PHI_75(2:end, 3) = out_75.Y_k(1:end-1);
 
 %solve least squares 
 Y_75 = out_75.Y_k;
@@ -171,46 +203,24 @@ a0_75 = Theta_75(3)
 
 
 
-%% E fix
-syms Rs R1 C1 
+%% E
+%Espressions:
+% Rs = b1
+% C1 = deltat/(b0+b1a0)
+% R1 = -deltat/c1(a0-1)
+
 % 25% SOC 
-
-eq1 = b1_25 == Rs;
-eq2 = b0_25 == (((Rs*Delta_t)/(R1*C1)) - Rs + (Delta_t/C1));
-eq3 = a0_25 == (1 - (Delta_t/(R1*C1)));
-
-[Rs_25, R1_25, C1_25] = solve([eq1, eq2, eq3], Rs, R1, C1);
-
-% Convert symbolic solutions to double
-Rs_25 = double(Rs_25)
-R1_25 = double(R1_25)
-C1_25 = double(C1_25)
-%% 50% SOC 
-
-eq1 = b1_50 == Rs;
-eq2 = b0_50 == (((Rs*Delta_t)/(R1*C1)) - Rs + (Delta_t/C1));
-eq3 = a0_50 == (1 - (Delta_t/(R1*C1)));
-
-[Rs_50, R1_50, C1_50] = solve([eq1, eq2, eq3], Rs, R1, C1);
-
-% Convert symbolic solutions to double
-Rs_50 = double(Rs_50)
-R1_50 = double(R1_50)
-C1_50 = double(C1_50)
-
-
-%% 75% SOC 
-
-eq1 = b1_75 == Rs;
-eq2 = b0_75 == (((Rs*Delta_t)/(R1*C1)) - Rs + (Delta_t/C1));
-eq3 = a0_75 == (1 - (Delta_t/(R1*C1)));
-
-[Rs_75, R1_75, C1_75] = solve([eq1, eq2, eq3], Rs, R1, C1);
-
-% Convert symbolic solutions to double
-Rs_75 = double(Rs_75)
-R1_75 = double(R1_75)
-C1_75 = double(C1_75)
+Rs_25 = b1_25
+C1_25 = Delta_t/(b0_25+b1_25*a0_25)
+R1_25 = -Delta_t/(C1_25*(a0_25-1))
+% 50% SOC 
+Rs_50 = b1_50
+C1_50 = Delta_t / (b0_50 + b1_50 * a0_50)
+R1_50 = -Delta_t / (C1_50 * (a0_50 - 1))
+% 75% SOC 
+Rs_75 = b1_75
+C1_75 = Delta_t / (b0_75 + b1_75 * a0_75)
+R1_75 = -Delta_t / (C1_75 * (a0_75 - 1))
 
 
 %% P3
@@ -220,10 +230,9 @@ Delta_t  = 1;
 Tspan = 1500;
 Rs = 0.04;
 R1 = 0.1;
-C = 300;
+C1 = 300;
 Q = 5;
 Soc_Init = 0.5;
-I_in = -2.5;
 
 mdl = "HW3_virtual_testbed_3";
 set_param(mdl, 'SimulationCommand', 'update');
@@ -231,13 +240,20 @@ simIn = Simulink.SimulationInput(mdl);
 simIn = setModelParameter(simIn,"StopTime",'Tspan');
 out = sim(simIn);
 
+image_data = imread('HW3_3a.PNG');
+
+figure;
+imshow(image_data);
+title('3A Simulink'); 
+
+
 %% B
-syms Rs R1 C1 
+
 %Preallocate big phi
 PHI = zeros(1501, 3);
 PHI(:, 1) = out.I_out;
 PHI(2:end, 2) = out.I_out(1:end-1);
-PHI(2:end, 3) = -1*out.Y_k(1:end-1);
+PHI(2:end, 3) = out.Y_k(1:end-1);
 
 %solve least squares 
 Y = out.Y_k;
@@ -246,16 +262,10 @@ b1 = Theta(1)
 b0 = Theta(2)
 a0 = Theta(3)
 
-eq1 = b1 == Rs;
-eq2 = b0 == (((Rs*Delta_t)/(R1*C1)) - Rs + (Delta_t/C1));
-eq3 = a0 == (1 - (Delta_t/(R1*C1)));
 
-[Rs, R1, C1] = solve([eq1, eq2, eq3], Rs, R1, C1);
-
-% Convert symbolic solutions to double
-Rs_est = double(Rs)
-R1_est = double(R1)
-C1_est = double(C1)
+Rs = b1;
+C1 = Delta_t / (b0 + b1 * a0);
+R1 = -Delta_t / (C1 * (a0 - 1));
 
 figure;
 
@@ -293,3 +303,5 @@ vals =  Nums';
 configTable = cell2table([titles, num2cell(vals)], 'VariableNames', col);
 configTable.(1) = categorical(configTable.(1));
 disp(configTable)
+
+%Parameters calculated and estimated are the same. 
